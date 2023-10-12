@@ -1,48 +1,25 @@
 namespace Tokei;
 
-public enum InstrCode {
-    // Register
-    add, sub, sll, slt, sltu, xor, srl, sra, or, and,
-    addw, subw, sllw, srlw, sraw,
+public abstract record Instruction(InstrCode Code) {
+    public static readonly Instruction NOP = new Immediate(InstrCode.addi, 0, 0, 0);
 
-    // Immediate
-    lb, lh, lw, ld, lbu, lhu, lwu,
-    fence, fence_i,
-    addi, slti, sltiu, xori, ori, andi, addiw,
-    jalr,
-    ecall, ebreak,
-    CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI,
+    public sealed record Error(InstrCode Code, uint RawInstruction) : Instruction(Code);
 
-    // Short immediate
-    slli, srli, srai, slliw, srliw, sraiw,
-
-    // Store
-    sb, sh, sw, sd,
-
-    // Branch
-    beq, bne, blt, bge, bltu, bgeu,
-
-    // Upper
-    auipc, lui,
-
-    // Jump
-    jal,
-}
-
-public abstract record Instruction(InstrCode Instr) {
     public override string ToString() => Disassembler.FormatInstruction(this);
 
-    public sealed record Register(InstrCode Instr, byte Rd, byte Rs1, byte Rs2) : Instruction(Instr);
+    public sealed record Register(InstrCode Code, byte Rd, byte Rs1, byte Rs2) : Instruction(Code);
 
-    public sealed record Immediate(InstrCode Instr, byte Rd, byte Rs, int Operand) : Instruction(Instr);
+    public sealed record Immediate(InstrCode Code, byte Rd, byte Rs, int Operand) : Instruction(Code);
 
     // public sealed record ShortImmediate(InstrCode Instr, byte Rs, byte ShortOperand) : Instruction(Instr);
 
-    public sealed record Store(InstrCode Instr, byte Rbase, byte Rs, int Offset) : Instruction(Instr);
+    public sealed record Store(InstrCode Code, byte Rbase, byte Rs, int Offset) : Instruction(Code);
 
-    public sealed record Branch(InstrCode Instr, byte Rs1, byte Rs2, int Offset) : Instruction(Instr);
+    public sealed record Branch(InstrCode Code, byte Rs1, byte Rs2, int Offset) : JumpLike(Code, Offset);
 
-    public sealed record UpperImmediate(InstrCode Instr, byte Rd, int Operand) : Instruction(Instr);
+    public sealed record UpperImmediate(InstrCode Code, byte Rd, int Operand) : Instruction(Code);
 
-    public sealed record Jump(InstrCode Instr, byte Rd, int Offset) : Instruction(Instr);
+    public sealed record Jump(InstrCode Code, byte Rd, int Offset) : JumpLike(Code, Offset);
+
+    public abstract record JumpLike(InstrCode Code, int Offset) : Instruction(Code);
 }
