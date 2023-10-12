@@ -6,7 +6,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Tokei</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1587;CS1591;CS1573</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blokyk.StarKid" Version="*" />
+    <!-- <ProjectReference Include="/home/blokyk/csharp/starkid/src/Blokyk.StarKid.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    /> -->
+  </ItemGroup>
 
   <ItemGroup>
     <Using Include="System.Diagnostics" />
