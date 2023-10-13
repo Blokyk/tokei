@@ -31,7 +31,7 @@ public static class Disassembler
         var (jmpToTargets, targetToLabel) = ExtractJumpInfo(instrs);
 
         var addressPadding
-            = (int)Math.Ceiling(Math.Log(instrs.Length*4, 16*2)); // it's prettier if it's padded every 2 digits :)
+            = (int)Math.Ceiling(Math.Log(instrs.Length*4, 16/2)); // it's prettier if it's padded every 2 digits :)
 
         for (int i = startInstr; i < startInstr + length; i++) {
             if (targetToLabel.TryGetValue(i, out var label)) {
@@ -79,7 +79,7 @@ public static class Disassembler
 
         for (int i = 0; i < instrs.Length; i++) {
             if (instrs[i] is Instruction.JumpLike { Offset: var offset })
-                jmpToTargetMap.Add(i, i + offset / 4);
+                jmpToTargetMap.Add(i, i + (offset / 4));
         }
 
         var uniqueTargets = jmpToTargetMap.Select(kv => kv.Value).ToHashSet();
@@ -172,7 +172,7 @@ public static class Disassembler
     static string Hex(int i) =>
         i >= 0
             ?  "0x" + Convert.ToString(i, 16)
-            : "-0x" + Convert.ToString(-i, 16);
+            : "-0x" + Convert.ToString(-i, 16) + " (0x" + Convert.ToString((uint)i, 16) + ")";
 
     static string Reg(byte reg)
         => ("x" + reg).PadLeft(3);
