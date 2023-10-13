@@ -66,7 +66,7 @@ internal static partial class TokeiApp
         var fileLength = fileStream.Length;
 
         if (fileLength > Int32.MaxValue)
-            throw new Exception("Can't read instructions from a file bigger than 2GiB");
+            throw new Exception("Can't read instructions from a file bigger than 2GiB (" + fileLength + ")");
 
         using var binStream = new BinaryReader(fileStream);
         var bytes = binStream.ReadBytes((int)fileLength).AsSpan(offset);
