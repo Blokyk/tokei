@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 using StarKid;
 
@@ -30,7 +30,7 @@ internal static partial class TokeiApp
 
         using var outputStream
             = outputFile.Exists
-            ? outputFile.OpenWrite()
+            ? outputFile.Open(FileMode.Truncate)
             : outputFile.Create();
 
         outputStream.Write(bytes);
