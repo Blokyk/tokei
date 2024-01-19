@@ -1,7 +1,5 @@
 namespace Tokei;
 
-
-
 public enum InstrCode {
     beqz = -1, bnez = -2,
     j = -3, jr = -4,
