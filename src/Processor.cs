@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Tokei;
@@ -48,9 +47,9 @@ public partial class Processor
 
     private void CheckOOB(int addr, int accessLength = 1) {
         if (addr < 0)
-            throw new IndexOutOfRangeException("Tried to access memory in the negative range");
+            throw new AccessViolationException("Tried to access memory in the negative range");
         if (addr + accessLength - 1 >= Memory.Length)
-            throw new IndexOutOfRangeException($"Tried to access {accessLength} bytes at address 0x{addr.ToString("x").PadLeft(8, '0')}, resulting in OOB access");
+            throw new AccessViolationException($"Tried to access {accessLength} bytes at address 0x{addr.ToString("x").PadLeft(8, '0')}");
     }
 
     private void CheckAlignement(Instruction instr) {
