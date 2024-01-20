@@ -11,7 +11,7 @@ public static partial class Assembler
         var encodedInstrs = new uint[instrs.Length];
 
         for (int i = 0; i < instrs.Length; i++)
-            encodedInstrs[i] = Encode(instrs[i]);
+            encodedInstrs[i] = Encoder.Encode(instrs[i]);
 
         return MemoryMarshal.Cast<uint, byte>(encodedInstrs.AsSpan());
     }

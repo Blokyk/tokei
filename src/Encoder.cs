@@ -1,8 +1,8 @@
 namespace Tokei;
 
-public static partial class Assembler
+public static class Encoder
 {
-    private static uint Encode(Instruction instr) {
+    public static uint Encode(Instruction instr) {
         var code = instr.Code;
 
         var opcode = GetOpcode(code);
@@ -142,6 +142,7 @@ public static partial class Assembler
     private static byte GetFunct3(InstrCode code) {
         switch (code) {
             case InstrCode.lb:
+            case InstrCode.sb:
             case InstrCode.fence:
             case InstrCode.addi:
             case InstrCode.add:
@@ -152,6 +153,7 @@ public static partial class Assembler
             case InstrCode.ebreak:
                 return 0b000;
             case InstrCode.lh:
+            case InstrCode.sh:
             case InstrCode.fence_i:
             case InstrCode.slli:
             case InstrCode.sll:
@@ -203,5 +205,4 @@ public static partial class Assembler
                 return 0b0000000;
         }
     }
-
 }
