@@ -165,25 +165,26 @@ public static partial class Assembler
             case InstrCode.sw: {
                 Token.Identifier? rbaseToken;
                 Token.Identifier? rsToken;
+                Token opRealToken;
                 Token.Number? opToken;
 
                 if (operands.Length == 2 && operands[1] is Token.OffsetAndBase offsetBaseToken) {
                     rbaseToken = offsetBaseToken.BaseRegister;
-                    opToken = offsetBaseToken.Offset;
+                    opRealToken = opToken = offsetBaseToken.Offset;
                 } else {
                     assertOperandCount(3);
                     rbaseToken = operands[0] as Token.Identifier;
-                    opToken = operands[2] as Token.Number;
+                    opToken = (opRealToken = operands[2]) as Token.Number;
                 }
 
-                rsToken = operands[1] as Token.Identifier;
+                rsToken = operands[0] as Token.Identifier;
 
                 if (rbaseToken is null || !TryGetRegisterValue(rbaseToken.Text, out var rbase))
                     throw new Exception($"{code}: expected a register name for rbase, but got '{operands[0]}' instead");
                 if (rsToken is null || !TryGetRegisterValue(rsToken.Text, out var rs))
                     throw new Exception($"{code}: expected a register name for rs, but got '{operands[1]}' instead");
                 if (opToken is null || !fitsInNBits(opToken.Value, 12))
-                    throw new Exception($"{code}: expected a (12-bit) numerical value for the immediate operand, but got '{operands[2]}' instead");
+                    throw new Exception($"{code}: expected a (12-bit) numerical value for the immediate operand, but got '{opRealToken}' instead");
 
                 return new Instruction.Store(code, rbase, rs, (int)opToken.Value);
             }
