@@ -265,7 +265,7 @@ public static class Decoder
 
     private static Immediate DecodeImmArithWord(uint rawInstr)
     {
-        Debug.Assert(GetOpcode(rawInstr) == 0b0010011);
+        Debug.Assert(GetOpcode(rawInstr) == 0b0011011);
 
         var rd = GetRd(rawInstr);
         var rs1 = GetRs1(rawInstr);
