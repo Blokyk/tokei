@@ -7,15 +7,23 @@ namespace Tokei;
 [CommandGroup("tokei", ShortDesc = "A RISC-V toolchain, written in C#")]
 internal static partial class TokeiApp
 {
-    private const string notFoundMsg = "File couldn't be found";
+    internal static Stream ParseFileNameOrStdIn(string s) {
+        if (s == "-")
+            return Console.OpenStandardInput();
+
+        if (!File.Exists(s))
+            throw new FileNotFoundException(null, s);
+
+        return File.OpenRead(s);
+    }
 
     /// <summary>Assemble RISC-V assembly into raw machine code</summary>
-    /// <param name="srcFile">Assembly file to convert</param>
+    /// <param name="srcStream">Assembly file to convert</param>
     /// <param name="outputFile">Path to the output raw binary file</param>
     [Command("asm")]
     public static void Assemble(
-        [ValidateWith(nameof(FileInfo.Exists), notFoundMsg)]
-        FileInfo srcFile,
+        [ParseWith(nameof(ParseFileNameOrStdIn))]
+        Stream srcStream,
 
         [Option("output", 'o')]
         [ValidateWith(nameof(CheckFileIsWritable))]
@@ -23,10 +31,10 @@ internal static partial class TokeiApp
     ) {
         outputFile ??= new FileInfo("a.out");
 
-        using var srcStream = new StreamReader(srcFile.OpenRead());
-        var src = srcStream.ReadToEnd();
+        using var srcStreamReader = new StreamReader(srcStream);
+        var srcText = srcStreamReader.ReadToEnd();
 
-        var bytes = Assembler.Assemble(src);
+        var bytes = Assembler.Assemble(srcText);
 
         using var outputStream
             = outputFile.Exists
@@ -46,8 +54,8 @@ internal static partial class TokeiApp
     /// <param name="byteOffset">Offset, in bytes, at which the instructions actually start in the input file</param>
     [Command("disasm")]
     public static void Disassemble(
-        [ValidateWith(nameof(FileInfo.Exists), notFoundMsg)]
-        FileInfo inputBinary,
+        [ParseWith(nameof(ParseFileNameOrStdIn))]
+        Stream inputBinary,
 
         [Option("endianness", 'e')]
         Endianness endianness,
@@ -56,7 +64,7 @@ internal static partial class TokeiApp
         [ValidateWith(nameof(MultiBaseInt.IsPositive))]
         MultiBaseInt byteOffset
     ) {
-        var bytes = ReadBinFile(inputBinary, endianness, byteOffset);
+        var bytes = ReadBinStream(inputBinary, endianness, byteOffset);
         Disassembler.PrintDisassembly(bytes);
     }
 
@@ -80,8 +88,8 @@ internal static partial class TokeiApp
     /// <param name="shouldSingleStep"></param>
     [Command("run", ShortDesc = "Emulate running a RISC-V binary")]
     public static void Run(
-        [ValidateWith(nameof(FileInfo.Exists), notFoundMsg)]
-        FileInfo inputBinary,
+        [ParseWith(nameof(ParseFileNameOrStdIn))]
+        Stream inputBinary,
 
         [Option("endianness", 'e')]
         Endianness endianness,
@@ -120,7 +128,7 @@ internal static partial class TokeiApp
         // if we don't step, we probably don't want to print the status (except if we're forced to)
         shouldPrintStatus ??= shouldSingleStep;
 
-        var bytes = ReadBinFile(inputBinary, endianness, inputOffset);
+        var bytes = ReadBinStream(inputBinary, endianness, inputOffset);
 
         if (memorySize == 0) {
             memorySize = bytes.Length + Math.Max(0, textOffset);

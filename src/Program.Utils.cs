@@ -61,15 +61,42 @@ internal static partial class TokeiApp
         );
     }
 
-    public static ReadOnlySpan<byte> ReadBinFile(FileInfo file, Endianness endianness, int offset) {
-        var fileStream = file.OpenRead();
-        var fileLength = fileStream.Length;
+    public static ReadOnlySpan<byte> ReadBinStream(Stream stream, Endianness endianness, int offset) {
+        Span<byte> bytes;
 
-        if (fileLength > Int32.MaxValue)
-            throw new Exception("Can't read instructions from a file bigger than 2GiB (" + fileLength + ")");
+        if (stream.CanSeek) {
+            var fileLength = stream.Length;
 
-        using var binStream = new BinaryReader(fileStream);
-        var bytes = binStream.ReadBytes((int)fileLength).AsSpan(offset);
+            if (fileLength > Int32.MaxValue)
+                throw new Exception("Can't read instructions from a file bigger than 2GiB (" + fileLength + ")");
+
+            using var binStream = new BinaryReader(stream);
+            bytes = binStream.ReadBytes((int)stream.Length).AsSpan(offset);
+        } else {
+            List<byte[]> buffers = [];
+
+            int lastRead = 0;
+            int currRead = 0;
+            byte[] currBuffer;
+
+            do {
+                lastRead = currRead;
+                currBuffer = new byte[2048];
+                buffers.Add(currBuffer);
+            } while ((currRead = stream.Read(currBuffer, 0, 2048)) > 0);
+
+            var bufferCount = buffers.Count - 1;
+
+            // if we didn't read anything
+            if (bufferCount == 0)
+                return [];
+
+            var finalBuffer = new byte[bufferCount * 2048];
+            for (int i = 0; i < bufferCount; i++)
+                buffers[i].CopyTo(finalBuffer.AsSpan(i*2048, 2048));
+
+            bytes = finalBuffer.AsSpan(0, (bufferCount - 1) * 2048 + lastRead);
+        }
 
         if (endianness is Endianness.Big)
             SpanUtils.Reverse4ByteEndianness(bytes);
