@@ -4,6 +4,16 @@ namespace Tokei;
 
 public partial class Processor
 {
+    public Processor Clone(bool cloneMemory = true) {
+        var newProcessor = new Processor(cloneMemory ? Memory.ToArray() : Memory);
+
+        OldRegisters.CopyTo(newProcessor.OldRegisters.AsSpan());
+        Registers.CopyTo(newProcessor.Registers.AsSpan());
+        newProcessor.PC = PC;
+
+        return newProcessor;
+    }
+
     public bool Step() {
         Array.Copy(Registers, OldRegisters, Registers.Length);
 
