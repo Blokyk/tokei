@@ -172,7 +172,7 @@ public static class Disassembler
     static string Hex(int i) =>
         i >= 0
             ?  "0x" + Convert.ToString(i, 16)
-            : "-0x" + Convert.ToString(-i, 16) + " (0x" + Convert.ToString((uint)i, 16) + ")";
+            : "-0x" + Convert.ToString(-i, 16) + " # (0x" + Convert.ToString((uint)i, 16) + ")";
 
     static string Reg(byte reg)
         => ("x" + reg).PadLeft(3);
