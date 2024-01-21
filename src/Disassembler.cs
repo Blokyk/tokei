@@ -130,7 +130,7 @@ public static class Disassembler
             case Instruction.Register r:
                 return $"{PaddedInstr(r.Code)} {Reg(r.Rd)}, {Reg(r.Rs1)}, {Reg(r.Rs2)}";
             case Instruction.Store s:
-                return $"{PaddedInstr(s.Code)} {Reg(s.Rbase)}, {s.Offset}({Reg(s.Rs)})";
+                return $"{PaddedInstr(s.Code)} {Reg(s.Rs)}, {s.Offset}(x{s.Rbase})";
             case Instruction.Branch b:
                 return $"{PaddedInstr(b.Code)} {Reg(b.Rs1)}, {Reg(b.Rs2)}, {Hex(b.Offset)}";
             case Instruction.UpperImmediate u:
