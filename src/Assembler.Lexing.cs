@@ -52,7 +52,7 @@ public static partial class Assembler
                 }
 
                 do { i++; }
-                while (i < src.Length && (Char.IsAsciiDigit(src[i]) || src[i] is 'x' or 'b'));
+                while (i < src.Length && (Char.IsAsciiHexDigit(src[i]) || src[i] is 'x' or 'b'));
 
                 long value = Utils.ParseDecimalOrHexOrBin(src.AsSpan()[startIdx..i]);
 
