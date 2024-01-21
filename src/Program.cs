@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-
+using System.Text;
 using StarKid;
 
 namespace Tokei;
@@ -42,6 +42,48 @@ internal static partial class TokeiApp
             : outputFile.Create();
 
         outputStream.Write(bytes);
+    }
+
+    [Command("gen-instrs")]
+    public static void Generate(
+        [ValidateWith(nameof(Int32.IsPositive))]
+        int count,
+
+        [Option("seed", 's')] int? seed,
+
+        [Option("output", 'o')] FileInfo? outputFile
+    ) {
+        var generator
+            = seed.HasValue
+            ? new InstructionGenerator(seed.Value)
+            : new();
+
+        Console.WriteLine($"Generating {count} instruction(s)");
+
+        var instrs = generator.GetRandomExecutableInstructions(count, out var finalState);
+
+        if (outputFile is not null) {
+            var sb = new StringBuilder();
+
+            sb.Append("# Seed: ").Append(generator.Seed).AppendLine("\n");
+
+            foreach (var instr in instrs) {
+                sb.AppendLine(Disassembler.FormatInstruction(instr));
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("# EXPECTED");
+
+            for (int i = 0; i < 32; i++) {
+                var val = finalState.Registers[i];
+                if (val != 0)
+                    sb.Append("# x").Append(i).Append(": ").Append(val).AppendLine();
+            }
+
+            File.WriteAllText(outputFile.FullName, sb.ToString());
+        } else {
+            Disassembler.PrintDisassembly(instrs);
+        }
     }
 
     public enum Endianness { Default, Big, Little = Default }
