@@ -42,6 +42,43 @@ public enum InstrCode {
 
 internal static class InstrCodeUtils
 {
+    public static bool IsPseudo(this InstrCode code)
+        => code is >= InstrCode.snez and <= InstrCode.beqz;
+    public static bool IsRegType(this InstrCode code)
+        => code is >= InstrCode.add and <= InstrCode.and;
+    public static bool IsImmType(this InstrCode code)
+        => code is >= InstrCode.lb and <= InstrCode.srai;
+    public static bool IsStoreType(this InstrCode code)
+        => code is >= InstrCode.sb and <= InstrCode.sd;
+    public static bool IsBranchType(this InstrCode code)
+        => code is >= InstrCode.beq and <= InstrCode.bgeu;
+    public static bool IsUpperType(this InstrCode code)
+        => code is >= InstrCode.auipc and <= InstrCode.lui;
+    public static bool IsJumpType(this InstrCode code)
+        => code is >= InstrCode.jal and <= InstrCode.jal;
+
+    public static bool IsInstructionType<T>(this InstrCode code) where T : Instruction {
+        // we perform the numeric checks first and only *then* do the expansive type check
+        if (code.IsRegType())
+            return typeof(T) == typeof(Instruction.Register);
+        if (code.IsImmType())
+            return typeof(T) == typeof(Instruction.Immediate);
+        if (code.IsStoreType())
+            return typeof(T) == typeof(Instruction.Store);
+        if (code.IsBranchType())
+            return typeof(T) == typeof(Instruction.Branch);
+        if (code.IsUpperType())
+            return typeof(T) == typeof(Instruction.UpperImmediate);
+        if (code.IsJumpType())
+            return typeof(T) == typeof(Instruction.Jump);
+        return typeof(T) == typeof(Instruction);
+    }
+
+    public static bool IsLoad(this InstrCode code)
+        => code is >= InstrCode.lb and <= InstrCode.lwu;
+    public static bool IsShortImm(this InstrCode code)
+        => code is >= InstrCode.slli and <= InstrCode.srai;
+
     public static bool TryParse(ReadOnlySpan<char> str, out InstrCode code) {
         code = str switch {
             "add"     => InstrCode.add,
