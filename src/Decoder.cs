@@ -62,9 +62,9 @@ public static class Decoder
     }
 
     private static Instruction DecodeCore(uint rawInstr) {
-        if (rawInstr == 0x0) {
-            return NOP;
-        }
+        // if (rawInstr == 0x0) {
+        //     return NOP;
+        // }
 
         byte opcode = GetOpcode(rawInstr);
 
