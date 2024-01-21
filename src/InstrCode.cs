@@ -21,7 +21,7 @@ public enum InstrCode {
     addi, slti, sltiu, xori, ori, andi, //addiw,
     jalr,
     ecall, ebreak,
-    CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI,
+    // CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI,
 
     // Short immediate
     slli, srli, srai, //slliw, srliw, sraiw,
