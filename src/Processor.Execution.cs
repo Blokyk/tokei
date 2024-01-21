@@ -79,7 +79,7 @@ public partial class Processor
             // sltu rd, rs1, rs2
             case Register { Code: InstrCode.sltu } sltu:
                 Registers[sltu.Rd]
-                    = (uint)Registers[sltu.Rs1] < (uint)Registers[sltu.Rs2]
+                    = (ulong)Registers[sltu.Rs1] < (ulong)Registers[sltu.Rs2]
                     ? 1 : 0;
                 break;
 
@@ -128,7 +128,7 @@ public partial class Processor
             // sltiu rd, rs1, imm
             case Immediate { Code: InstrCode.sltiu } sltiu:
                 Registers[sltiu.Rd]
-                    = Registers[sltiu.Rs] < sltiu.Operand
+                    = (ulong)Registers[sltiu.Rs] < (ulong)sltiu.Operand
                     ? 1 : 0;
                 break;
 
@@ -155,7 +155,7 @@ public partial class Processor
                 break;
             // bgeu rs1, rs2, offset
             case Branch { Code: InstrCode.bgeu } bgeu:
-                if ((uint)Registers[bgeu.Rs1] < (uint)Registers[bgeu.Rs2])
+                if ((ulong)Registers[bgeu.Rs1] < (ulong)Registers[bgeu.Rs2])
                     break;
                 PC += bgeu.Offset;
                 changedPC = true;
@@ -169,7 +169,7 @@ public partial class Processor
                 break;
             // bltu rs1, rs2, offset
             case Branch { Code: InstrCode.bltu } bltu:
-                if ((uint)Registers[bltu.Rs1] >= (uint)Registers[bltu.Rs2])
+                if ((ulong)Registers[bltu.Rs1] >= (ulong)Registers[bltu.Rs2])
                     break;
                 PC += bltu.Offset;
                 changedPC = true;
