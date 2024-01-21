@@ -157,12 +157,12 @@ internal static partial class TokeiApp
                 Console.Clear();
                 cpu.PrintState();
 
-                var memAsInts = MemoryMarshal.Cast<byte, uint>(cpu.Memory)[memoryWatchRange];
+                var memAsInts = MemoryMarshal.Cast<byte, uint>(cpu.Memory.Span)[memoryWatchRange];
                 if (memAsInts.Length != 0) {
                     Console.WriteLine();
                     Console.WriteLine("Memory:");
                     for (int i = 0; i < memAsInts.Length; i++) {
-                        Console.WriteLine("0x" + Convert.ToString(memAsInts[i], 16).PadLeft(8, '0'));
+                        Console.WriteLine("0x" + Convert.ToString(memAsInts[i], 16).PadLeft(16, '0'));
                     }
                 }
             }
@@ -176,13 +176,13 @@ internal static partial class TokeiApp
                           "  "
                         + regStr
                         + " = 0x"
-                        + Convert.ToString(cpu.Registers[regIdx], 16).PadLeft(8, '0')
+                        + Convert.ToString(cpu.Registers[regIdx], 16).PadLeft(16, '0')
                     );
                 }
             }
 
             if (shouldSingleStep)
                 Console.ReadKey();
-        } while (cpu.MoveNext());
+        } while (cpu.Step());
     }
 }

@@ -1,21 +1,20 @@
-namespace Tokei;
+using static Tokei.Instruction;
 
-using System.Runtime.CompilerServices;
-using static Instruction;
+namespace Tokei;
 
 public partial class Processor
 {
-    public bool MoveNext() {
+    public bool Step() {
         Array.Copy(Registers, OldRegisters, Registers.Length);
 
-        // if we go OOB we want to raise an exception instead
+        // if we're at the end of memory, just stop
         if (PC == Memory.Length)
             return false;
-        CheckOOB(PC, 4);
 
+        // CurrentInstruction will take care of raising an exception for us
         var instr = CurrentInstruction;
 
-        int oldPC = PC; // used to check if we're in a loop
+        long oldPC = PC; // used to check if we're in a loop
         bool changedPC = false;
 
         CheckAlignement(instr);
@@ -50,15 +49,15 @@ public partial class Processor
                 break;
             // sra rd, rs1, rs2
             case Register { Code: InstrCode.sra } sra:
-                Registers[sra.Rd] = Registers[sra.Rs1] >> Registers[sra.Rs2];
+                Registers[sra.Rd] = Registers[sra.Rs1] >> (byte)(Registers[sra.Rs2] & 0b11111);
                 break;
             // srl rd, rs1, rs2
             case Register { Code: InstrCode.srl } srl:
-                Registers[srl.Rd] = Registers[srl.Rs1] >>> Registers[srl.Rs2];
+                Registers[srl.Rd] = Registers[srl.Rs1] >>> (byte)(Registers[srl.Rs2] & 0b11111);
                 break;
             // sll rd, rs1, rs2
             case Register { Code: InstrCode.sll } sll:
-                Registers[sll.Rd] = Registers[sll.Rs1] << Registers[sll.Rs2];
+                Registers[sll.Rd] = Registers[sll.Rs1] << (byte)(Registers[sll.Rs2] & 0b11111);
                 break;
 
             // slt rd, rs1, rs2
@@ -90,8 +89,8 @@ public partial class Processor
                 Registers[andi.Rd] = Registers[andi.Rs] & andi.Operand;
                 break;
             // ori rd, rs1, rs2
-            case Register { Code: InstrCode.ori } ori:
-                Registers[ori.Rd] = Registers[ori.Rs1] | Registers[ori.Rs2];
+            case Immediate { Code: InstrCode.ori } ori:
+                Registers[ori.Rd] = Registers[ori.Rs] | (long)ori.Operand;
                 break;
             // xori rd, rs1, rs2
             case Immediate { Code: InstrCode.xori } xori:
@@ -200,43 +199,43 @@ public partial class Processor
             // lb rd, rs, offset
             case Immediate { Code: InstrCode.lb } lb: {
                 var addr = Registers[lb.Rs] + lb.Operand;
-                CheckOOB(addr, 1);
-                Registers[lb.Rd] = (sbyte)Memory[addr];
+                Registers[lb.Rd] = ReadMemory<sbyte>(addr);
                 break;
             }
             // lbu rd, rs, offset
             case Immediate { Code: InstrCode.lbu } lbu: {
                 var addr = Registers[lbu.Rs] + lbu.Operand;
-                CheckOOB(addr, 1);
-                Registers[lbu.Rd] = (byte)Memory[addr];
+                Registers[lbu.Rd] = ReadMemory<byte>(addr);
                 break;
             }
             // lh rd, rs, offset
             case Immediate { Code: InstrCode.lh } lh: {
                 var addr = Registers[lh.Rs] + lh.Operand;
-                CheckOOB(addr, 2);
-                Registers[lh.Rd] = Unsafe.As<byte, short>(ref Memory[addr]);
+                Registers[lh.Rd] = ReadMemory<short>(addr);
                 break;
             }
             // lhu rd, rs, offset
             case Immediate { Code: InstrCode.lhu } lhu: {
                 var addr = Registers[lhu.Rs] + lhu.Operand;
-                CheckOOB(addr, 2);
-                Registers[lhu.Rd] = Unsafe.As<byte, ushort>(ref Memory[addr]);
+                Registers[lhu.Rd] = ReadMemory<ushort>(addr);
                 break;
             }
             // lw rd, rs, offset
             case Immediate { Code: InstrCode.lw } lw: {
                 var addr = Registers[lw.Rs] + lw.Operand;
-                CheckOOB(addr, 4);
-                Registers[lw.Rd] = Unsafe.As<byte, int>(ref Memory[addr]);
+                Registers[lw.Rd] = ReadMemory<int>(addr);
                 break;
             }
             // lwu rd, rs, offset
             case Immediate { Code: InstrCode.lwu } lwu: {
                 var addr = Registers[lwu.Rs] + lwu.Operand;
-                CheckOOB(addr, 4);
-                Registers[lwu.Rd] = (int)Unsafe.As<byte, uint>(ref Memory[addr]);
+                Registers[lwu.Rd] = ReadMemory<uint>(addr);
+                break;
+            }
+            // ld rd, rs, offset
+            case Immediate { Code: InstrCode.ld } ld: {
+                var addr = Registers[ld.Rs] + ld.Operand;
+                Registers[ld.Rd] = ReadMemory<long>(addr);
                 break;
             }
             // lui rd, imm
@@ -244,31 +243,28 @@ public partial class Processor
                 Registers[lui.Rd] = lui.Operand;
                 break;
 
-            // sb rs, rb[offset]
+            // sb rs, rb(offset)
             case Store { Code: InstrCode.sb } sb: {
-                var addr = Registers[sb.Rbase + sb.Offset];
-                CheckOOB(addr, 1);
-                Memory[addr] = (byte)Registers[sb.Rs];
+                var addr = Registers[sb.Rbase] + sb.Offset;
+                WriteMemory(addr, (byte)Registers[sb.Rs]);
                 break;
             }
-            // sh rs, rb[offset]
+            // sh rs, rb(offset)
             case Store { Code: InstrCode.sh } sh: {
-                var addr = Registers[sh.Rbase + sh.Offset];
-                CheckOOB(addr, 2);
-                BitConverter.TryWriteBytes(
-                    Memory.AsSpan(addr, 2),
-                    (short)Registers[sh.Rs]
-                );
+                var addr = Registers[sh.Rbase] + sh.Offset;
+                WriteMemory(addr, (short)Registers[sh.Rs]);
                 break;
             }
-            // sw rs, rb[offset]
+            // sw rs, rb(offset)
             case Store { Code: InstrCode.sw } sw: {
-                var addr = Registers[sw.Rbase + sw.Offset];
-                CheckOOB(addr, 4);
-                BitConverter.TryWriteBytes(
-                    Memory.AsSpan(addr, 4),
-                    (int)Registers[sw.Rs]
-                );
+                var addr = Registers[sw.Rbase] + sw.Offset;
+                WriteMemory(addr, (int)Registers[sw.Rs]);
+                break;
+            }
+            // sd rs, rb(offset)
+            case Store { Code: InstrCode.sd } sd: {
+                var addr = Registers[sd.Rbase] + sd.Offset;
+                WriteMemory(addr, (long)Registers[sd.Rs]);
                 break;
             }
 
@@ -288,10 +284,8 @@ public partial class Processor
             case Immediate { Code: InstrCode.fence or InstrCode.fence_i }:
                 Console.WriteLine("fence/fence.i received");
                 break;
-            // ld rd, rs, offset
-            case Immediate { Code: InstrCode.ld }:
-            case Store { Code: InstrCode.sd }:
-                throw new InvalidOperationException("Tried to use a dw/64-bit instruction on a 32-bit platform");
+            case Error { RawInstruction: 0x0 }:
+                return false;
             case Error e:
                 throw new InvalidOperationException(
                     "Tried to execute an invalid instruction: "
