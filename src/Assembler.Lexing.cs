@@ -36,7 +36,7 @@ public static partial class Assembler
                 var startIdx = i;
 
                 do { i++; }
-                while (i < src.Length && Char.IsAsciiLetterOrDigit(src[i]) || src[i] is '.');
+                while (i < src.Length && (Char.IsAsciiLetterOrDigit(src[i]) || src[i] is '.' or '_'));
 
                 tokens.Add(new Token.Identifier(src[startIdx..i]));
                 i--;
