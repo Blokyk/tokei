@@ -294,13 +294,10 @@ public partial class Processor
             case Immediate { Code: InstrCode.fence or InstrCode.fence_i }:
                 Console.WriteLine("fence/fence.i received");
                 break;
-            case Error { RawInstruction: 0x0 }:
+            case Error { RawInstruction: 0x0 }: // completely stop on 0x0
                 return false;
             case Error e:
-                throw new InvalidOperationException(
-                    "Tried to execute an invalid instruction: "
-                    + Disassembler.FormatInvalidInstruction(e.RawInstruction)
-                );
+                throw new InvalidInstructionException(e.RawInstruction);
             default:
                 throw new NotImplementedException(instr.ToString());
         }
