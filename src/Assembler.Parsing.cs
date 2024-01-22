@@ -83,6 +83,7 @@ public static partial class Assembler
             Instruction.JumpLike jl => jl with { Offset = offset },
             SyntheticInstruction.BranchZero bz => bz with { Offset = offset },
             SyntheticInstruction.JumpAbs j => j with { Offset = offset },
+            SyntheticInstruction.Call call => call with { Offset = offset },
 
             // * absolute, so labelPos, not offset
             SyntheticInstruction.LoadAddress la => la with { Address = labelPos },
@@ -143,6 +144,9 @@ public static partial class Assembler
             case InstrCode.snez:
                 var snez = (SyntheticInstruction.Set)instr;
                 return (new Instruction.Register(InstrCode.sltu, snez.Rd, 0, snez.Rs), null);
+            case InstrCode.call:
+                var call = (SyntheticInstruction.Call)instr;
+                return (new Instruction.Jump(InstrCode.jal, 1, call.Offset), null);
             default:
                 throw new InvalidOperationException($"Tried to lower terminal or unknown instruction '{instr.Code}'!");
         }

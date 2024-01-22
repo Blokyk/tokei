@@ -26,6 +26,8 @@ public static partial class Assembler
         public record Ret() : SyntheticInstruction(InstrCode.ret);
         // seqz, snez
         public record Set(InstrCode Code, byte Rd, byte Rs) : SyntheticInstruction(Code);
+        // call
+        public record Call(int Offset) : SyntheticInstruction(InstrCode.call);
     }
 
     private static Instruction ParseInstruction(Token.Identifier instrName, ref Stack<Token> tokens) {
@@ -277,6 +279,14 @@ public static partial class Assembler
                     throw new Exception($"{code}: expected a register name for rs1, but got '{operands[1]}' instead");
 
                 return new SyntheticInstruction.Set(code, rd, rs);
+            }
+
+            case InstrCode.call: {
+                assertOperandCount(1);
+                var offset = ParseLabelOrOffset(operands[0], 20, code, out var label);
+
+                var instr = new SyntheticInstruction.Call(offset);
+                return label is null ? instr : WithLabel(instr, label);
             }
 
             case InstrCode.fence:

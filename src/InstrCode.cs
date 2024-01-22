@@ -8,6 +8,7 @@ public enum InstrCode {
     nop = -10,
     ret = -11,
     seqz = -12, snez = -13,
+    call = -14,
 
     ERROR = 0,
 
@@ -43,7 +44,7 @@ public enum InstrCode {
 internal static class InstrCodeUtils
 {
     public static bool IsPseudo(this InstrCode code)
-        => code is >= InstrCode.snez and <= InstrCode.beqz;
+        => code < 0;
     public static bool IsRegType(this InstrCode code)
         => code is >= InstrCode.add and <= InstrCode.and;
     public static bool IsImmType(this InstrCode code)
@@ -140,6 +141,7 @@ internal static class InstrCodeUtils
             "ret" => InstrCode.ret,
             "seqz" => InstrCode.seqz,
             "snez" => InstrCode.snez,
+            "call" => InstrCode.call,
 
             _ => InstrCode.ERROR
         };
