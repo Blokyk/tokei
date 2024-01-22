@@ -16,9 +16,9 @@ public static class Disassembler
         PrintDisassembly(Decode(bytes), startInstr, length, highlightedInstr);
     }
 
-    public static void PrintDisassembly(Instruction[] instrs)
+    public static void PrintDisassembly(Span<Instruction> instrs)
         => PrintDisassembly(instrs, 0, instrs.Length, -1);
-    public static void PrintDisassembly(Instruction[] instrs, int startInstr, int length, int highlightedInstr) {
+    public static void PrintDisassembly(Span<Instruction> instrs, int startInstr, int length, int highlightedInstr) {
         if (length == 0)
             return;
 
@@ -74,7 +74,7 @@ public static class Disassembler
         Dictionary<int, string> AddressToLabel
     );
 
-    private static ResolvedJumpsInfo ExtractJumpInfo(Instruction[] instrs) {
+    private static ResolvedJumpsInfo ExtractJumpInfo(Span<Instruction> instrs) {
         var jmpToTargetMap = new Dictionary<int, int>();
 
         for (int i = 0; i < instrs.Length; i++) {

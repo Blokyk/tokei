@@ -363,7 +363,7 @@ public static partial class Assembler
         }
         // we have to push back the newline we last consumed to leave the stream intact
         tokens.Push(Token.Newline);
-        return operandTokens.ToArray();
+        return [..operandTokens];
     }
 
     static bool TryGetRegisterValue(string str, out byte regIdx) {
