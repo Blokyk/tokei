@@ -20,11 +20,12 @@ public static class Encoder
             }
             case Instruction.Immediate i: {
                 var f3 = GetFunct3(code);
+                var f7_mask = GetImmFunct7(code);
                 return (uint)(opcode
                     | (i.Rd << 7)
                     | (f3 << 12)
                     | (i.Rs << 15)
-                    | (i.Operand << 20)
+                    | ((i.Operand | f7_mask) << 20)
                 );
             }
             case Instruction.Store s: {
@@ -195,14 +196,24 @@ public static class Encoder
         }
     }
 
+    private static ushort GetImmFunct7(InstrCode code) {
+        switch (code) {
+            case InstrCode.ebreak:
+                return 1;
+            case InstrCode.srai:
+                return 0x20 << 5;
+            default:
+                return 0;
+        }
+    }
+
     private static byte GetFunct7(InstrCode code) {
         switch (code) {
-            case InstrCode.srai:
             case InstrCode.sub:
             case InstrCode.sra:
                 return 0b0100000;
             default:
-                return 0b0000000;
+                return 0;
         }
     }
 }

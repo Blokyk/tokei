@@ -244,7 +244,7 @@ public static class Decoder
         var f3 = GetFunct3(rawInstr);
         var f7 = GetFunct7(rawInstr);
 
-        InstrCode code = f3 switch {
+        var code = f3 switch {
             0b000 => InstrCode.addi,
             0b001 => f7 switch { 0b0000000 => InstrCode.slli, _ => InvalidInstruction(rawInstr) },
             0b010 => InstrCode.slti,
@@ -259,6 +259,14 @@ public static class Decoder
             0b111 => InstrCode.andi,
             _ => InvalidInstruction(rawInstr)
         };
+
+        switch (f3) {
+            case 0b001: // slli
+            case 0b101: // srli/srai
+                // shamt = imm[4:0]
+                imm &= 0b11111;
+                break;
+        }
 
         return new(code, rd, rs1, imm);
     }
@@ -289,9 +297,6 @@ public static class Decoder
     }
 
     private static InstrCode InvalidInstruction(uint rawInstr) {
-#if DEBUG
-        //Console.Error.WriteLine("Couldn't decode instruction: " + Disassembler.FormatInvalidInstruction(rawInstr));
-#endif
         return InstrCode.ERROR;
     }
 }
